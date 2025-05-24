@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartHome App - Kamery</title>
+    <title>SmartHome App - Kamery i Światła</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -20,11 +20,11 @@
         label input[type="checkbox"] { width: auto; margin-right: 0.5em; }
         ul { list-style: none; padding: 0; }
         li { margin: 0.5em 0; background: #1f1f1f; padding: 0.5em; display: flex; justify-content: space-between; align-items: center; }
-        li button { background: red; color: white; border: none; padding: 0.3em 0.5em; }
+        li button { margin-left: 0.5em; }
     </style>
 </head>
 <body>
-    <header>SmartHome Kamery</header>
+    <header>SmartHome Kamery i Światła</header>
     <nav>
         <button onclick="showSection('cameras')">Kamery</button>
         <button onclick="showSection('lights')">Światła</button>
@@ -52,8 +52,16 @@
             <input type="text" id="cameraLocation" placeholder="Lokalizacja (np. Ogród)">
             <button onclick="addCamera()">Dodaj kamerę</button>
             <ul id="cameraList"></ul>
-            <button onclick="logout()">Wyloguj</button>
         </div>
+        <div id="lights-section" style="display:none;">
+            <h3>Dodaj włącznik światła</h3>
+            <input type="text" id="lightName" placeholder="Nazwa włącznika">
+            <input type="text" id="lightID" placeholder="Adres/ID urządzenia">
+            <input type="text" id="lightLocation" placeholder="Lokalizacja (np. Salon)">
+            <button onclick="addLight()">Dodaj włącznik</button>
+            <ul id="lightList"></ul>
+        </div>
+        <button onclick="logout()">Wyloguj</button>
     </section>
 
     <script>
@@ -72,23 +80,21 @@
 
         auth.onAuthStateChanged(user => {
             if (user) {
-                console.log('Użytkownik zalogowany:', user.email);
                 document.getElementById('login-section').style.display = 'none';
-                document.getElementById('cameras-section').style.display = 'block';
-                loadCameras();
+                showSection('cameras');
             } else {
-                console.log('Brak zalogowanego użytkownika');
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('cameras-section').style.display = 'none';
+                document.getElementById('lights-section').style.display = 'none';
             }
         });
 
         function showSection(name) {
-            if (name === 'cameras') {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('cameras-section').style.display = 'block';
-                loadCameras();
-            }
+            document.getElementById('cameras-section').style.display = 'none';
+            document.getElementById('lights-section').style.display = 'none';
+            if (name === 'cameras') loadCameras();
+            if (name === 'lights') loadLights();
+            document.getElementById(name + '-section').style.display = 'block';
         }
 
         function login() {
@@ -105,10 +111,7 @@
                 alert('Zalogowano!');
                 showSection('cameras');
             })
-            .catch(error => {
-                console.error('Błąd logowania:', error);
-                alert('Błąd logowania: ' + error.message);
-            });
+            .catch(error => alert('Błąd logowania: ' + error.message));
         }
 
         function signup() {
@@ -116,58 +119,27 @@
             const password = document.getElementById('password').value;
             auth.createUserWithEmailAndPassword(email, password)
                 .then(() => alert('Zarejestrowano!'))
-                .catch(error => {
-                    console.error('Błąd rejestracji:', error);
-                    alert('Błąd rejestracji: ' + error.message);
-                });
+                .catch(error => alert('Błąd rejestracji: ' + error.message));
         }
 
         function logout() {
             auth.signOut().then(() => {
                 alert('Wylogowano!');
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('cameras-section').style.display = 'none';
             });
         }
 
         function addCamera() {
-            const user = auth.currentUser;
-            if (!user) {
-                alert('Musisz być zalogowany, aby dodać kamerę!');
-                return;
-            }
-
             const name = document.getElementById('cameraName').value.trim();
             const url = document.getElementById('cameraURL').value.trim();
             const type = document.getElementById('cameraType').value.trim();
             const location = document.getElementById('cameraLocation').value.trim();
-
             if (!name || !url || !type || !location) {
-                alert('Proszę uzupełnić wszystkie pola kamery!');
+                alert('Uzupełnij wszystkie pola kamery!');
                 return;
             }
-
             db.collection('cameras').add({ name, url, type, location })
-                .then(() => {
-                    alert('Dodano kamerę!');
-                    loadCameras();
-                })
-                .catch(error => {
-                    console.error('Błąd przy dodawaniu kamery:', error);
-                    alert('Błąd przy dodawaniu kamery: ' + error.message);
-                });
-        }
-
-        function deleteCamera(id) {
-            db.collection('cameras').doc(id).delete()
-                .then(() => {
-                    alert('Usunięto kamerę!');
-                    loadCameras();
-                })
-                .catch(error => {
-                    console.error('Błąd przy usuwaniu kamery:', error);
-                    alert('Błąd przy usuwaniu kamery: ' + error.message);
-                });
+                .then(() => { alert('Dodano kamerę!'); loadCameras(); })
+                .catch(error => alert('Błąd: ' + error.message));
         }
 
         function loadCameras() {
@@ -178,15 +150,45 @@
                     const cam = doc.data();
                     const li = document.createElement('li');
                     li.textContent = `${cam.name} (${cam.type}) - ${cam.location}`;
-                    const delBtn = document.createElement('button');
-                    delBtn.textContent = 'Usuń';
-                    delBtn.onclick = () => deleteCamera(doc.id);
-                    li.appendChild(delBtn);
                     list.appendChild(li);
                 });
-            }).catch(error => {
-                console.error('Błąd przy ładowaniu kamer:', error);
-                alert('Błąd przy ładowaniu kamer: ' + error.message);
+            });
+        }
+
+        function addLight() {
+            const name = document.getElementById('lightName').value.trim();
+            const id = document.getElementById('lightID').value.trim();
+            const location = document.getElementById('lightLocation').value.trim();
+            if (!name || !id || !location) {
+                alert('Uzupełnij wszystkie pola włącznika!');
+                return;
+            }
+            db.collection('lights').add({ name, id, location, state: 'off' })
+                .then(() => { alert('Dodano włącznik!'); loadLights(); })
+                .catch(error => alert('Błąd: ' + error.message));
+        }
+
+        function toggleLight(docId, currentState) {
+            const newState = currentState === 'on' ? 'off' : 'on';
+            db.collection('lights').doc(docId).update({ state: newState })
+                .then(() => { loadLights(); })
+                .catch(error => alert('Błąd: ' + error.message));
+        }
+
+        function loadLights() {
+            const list = document.getElementById('lightList');
+            list.innerHTML = '';
+            db.collection('lights').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const light = doc.data();
+                    const li = document.createElement('li');
+                    li.textContent = `${light.name} (${light.location}) - Stan: ${light.state}`;
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.textContent = light.state === 'on' ? 'Wyłącz' : 'Włącz';
+                    toggleBtn.onclick = () => toggleLight(doc.id, light.state);
+                    li.appendChild(toggleBtn);
+                    list.appendChild(li);
+                });
             });
         }
     </script>
