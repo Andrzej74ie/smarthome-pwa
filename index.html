@@ -16,11 +16,11 @@
         nav button { background: none; border: none; color: white; padding: 1em; font-size: 1em; }
         section { padding: 2em; }
         input, button, select { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+        label { display: flex; align-items: center; margin: 0.5em 0; font-size: 0.9em; }
+        label input[type="checkbox"] { width: auto; margin-right: 0.5em; }
         ul { list-style: none; padding: 0; }
         li { margin: 0.5em 0; background: #1f1f1f; padding: 0.5em; display: flex; justify-content: space-between; align-items: center; }
         li button { background: red; color: white; border: none; padding: 0.3em 0.5em; }
-        label { display: flex; align-items: center; margin: 0.5em 0; }
-        label input { width: auto; margin-right: 0.5em; }
     </style>
 </head>
 <body>
@@ -52,6 +52,7 @@
             <input type="text" id="cameraLocation" placeholder="Lokalizacja (np. Ogród)">
             <button onclick="addCamera()">Dodaj kamerę</button>
             <ul id="cameraList"></ul>
+            <button onclick="logout()">Wyloguj</button>
         </div>
     </section>
 
@@ -69,10 +70,11 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Check if user is already logged in
         auth.onAuthStateChanged(user => {
             if (user) {
-                showSection('cameras');
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('cameras-section').style.display = 'block';
+                loadCameras();
             } else {
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('cameras-section').style.display = 'none';
@@ -110,6 +112,14 @@
             auth.createUserWithEmailAndPassword(email, password)
                 .then(() => alert('Zarejestrowano!'))
                 .catch(error => alert(error.message));
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                alert('Wylogowano!');
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('cameras-section').style.display = 'none';
+            });
         }
 
         function addCamera() {
