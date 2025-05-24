@@ -123,17 +123,25 @@
         }
 
         function addCamera() {
-            const name = document.getElementById('cameraName').value;
-            const url = document.getElementById('cameraURL').value;
-            const type = document.getElementById('cameraType').value;
-            const location = document.getElementById('cameraLocation').value;
+            const name = document.getElementById('cameraName').value.trim();
+            const url = document.getElementById('cameraURL').value.trim();
+            const type = document.getElementById('cameraType').value.trim();
+            const location = document.getElementById('cameraLocation').value.trim();
+
+            if (!name || !url || !type || !location) {
+                alert('Proszę uzupełnić wszystkie pola kamery!');
+                return;
+            }
 
             db.collection('cameras').add({ name, url, type, location })
                 .then(() => {
                     alert('Dodano kamerę!');
                     loadCameras();
                 })
-                .catch(error => alert(error.message));
+                .catch(error => {
+                    console.error('Błąd przy dodawaniu kamery:', error);
+                    alert('Wystąpił błąd przy dodawaniu kamery. Sprawdź konsolę.');
+                });
         }
 
         function deleteCamera(id) {
@@ -142,7 +150,10 @@
                     alert('Usunięto kamerę!');
                     loadCameras();
                 })
-                .catch(error => alert(error.message));
+                .catch(error => {
+                    console.error('Błąd przy usuwaniu kamery:', error);
+                    alert('Wystąpił błąd przy usuwaniu kamery. Sprawdź konsolę.');
+                });
         }
 
         function loadCameras() {
@@ -159,6 +170,8 @@
                     li.appendChild(delBtn);
                     list.appendChild(li);
                 });
+            }).catch(error => {
+                console.error('Błąd przy ładowaniu kamer:', error);
             });
         }
     </script>
