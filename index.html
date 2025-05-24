@@ -80,9 +80,11 @@
 
         auth.onAuthStateChanged(user => {
             if (user) {
+                console.log('Zalogowany:', user.email);
                 document.getElementById('login-section').style.display = 'none';
                 showSection('cameras');
             } else {
+                console.log('Brak zalogowanego użytkownika');
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('cameras-section').style.display = 'none';
                 document.getElementById('lights-section').style.display = 'none';
@@ -90,8 +92,10 @@
         });
 
         function showSection(name) {
+            console.log('Przełączanie na sekcję:', name);
             document.getElementById('cameras-section').style.display = 'none';
             document.getElementById('lights-section').style.display = 'none';
+
             if (name === 'cameras') {
                 document.getElementById('cameras-section').style.display = 'block';
                 loadCameras();
