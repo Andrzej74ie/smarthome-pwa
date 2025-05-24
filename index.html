@@ -6,31 +6,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartHome App</title>
     <link rel="manifest" href="manifest.json">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #121212; color: white; }
         header { background: #1f1f1f; padding: 1em; text-align: center; font-size: 1.5em; }
         nav { display: flex; justify-content: space-around; background: #2c2c2c; }
         nav button { background: none; border: none; color: white; padding: 1em; font-size: 1em; }
         section { padding: 2em; }
+        input, button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
     </style>
 </head>
 <body>
     <header>SmartHome</header>
     <nav>
-        <button onclick="showSection('Kamery')">Kamery</button>
-        <button onclick="showSection('Swiatla')">Światła</button>
-        <button onclick="showSection('Czat')">Czat</button>
-        <button onclick="showSection('Ustawienia')">Ustawienia</button>
+        <button onclick="showSection('cameras')">Kamery</button>
+        <button onclick="showSection('lights')">Światła</button>
+        <button onclick="showSection('chat')">Czat</button>
+        <button onclick="showSection('settings')">Ustawienia</button>
     </nav>
-    <section id="content">Wybierz zakładkę powyżej.</section>
+    <section id="content">
+        <div id="login-section">
+            <h3>Zaloguj się</h3>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Hasło">
+            <button onclick="login()">Zaloguj</button>
+            <button onclick="signup()">Zarejestruj się</button>
+        </div>
+        <div id="devices-section" style="display:none;">
+            <h3>Dodaj urządzenie</h3>
+            <input type="text" id="deviceName" placeholder="Nazwa urządzenia">
+            <button onclick="addDevice()">Dodaj</button>
+            <ul id="deviceList"></ul>
+        </div>
+    </section>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "WSTAW_SWÓJ_API_KEY",
+            authDomain: "WSTAW_SWÓJ_AUTH_DOMAIN",
+            projectId: "WSTAW_SWÓJ_PROJECT_ID",
+            storageBucket: "WSTAW_SWÓJ_STORAGE_BUCKET",
+            messagingSenderId: "WSTAW_SWÓJ_MSG_ID",
+            appId: "WSTAW_SWÓJ_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         function showSection(name) {
             document.getElementById('content').innerText = 'Wyświetlasz: ' + name;
         }
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').then(() => {
-                console.log('Service Worker zarejestrowany');
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert('Zalogowano!');
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('devices-section').style.display = 'block';
+                    loadDevices();
+                })
+                .catch(error => alert(error.message));
+        }
+
+        function signup() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => alert('Zarejestrowano!'))
+                .catch(error => alert(error.message));
+        }
+
+        function addDevice() {
+            const name = document.getElementById('deviceName').value;
+            db.collection('devices').add({ name })
+                .then(() => {
+                    alert('Dodano urządzenie!');
+                    loadDevices();
+                })
+                .catch(error => alert(error.message));
+        }
+
+        function loadDevices() {
+            const list = document.getElementById('deviceList');
+            list.innerHTML = '';
+            db.collection('devices').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const li = document.createElement('li');
+                    li.textContent = doc.data().name;
+                    list.appendChild(li);
+                });
             });
         }
     </script>
