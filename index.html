@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHome App</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #121212; color: white; }
+        header { background: #1f1f1f; padding: 1em; text-align: center; font-size: 1.5em; }
+        nav { display: flex; justify-content: space-around; background: #2c2c2c; }
+        nav button { background: none; border: none; color: white; padding: 1em; font-size: 1em; }
+        section { padding: 2em; }
+    </style>
+</head>
+<body>
+    <header>SmartHome</header>
+    <nav>
+        <button onclick="showSection('Kamery')">Kamery</button>
+        <button onclick="showSection('Swiatla')">Światła</button>
+        <button onclick="showSection('Czat')">Czat</button>
+        <button onclick="showSection('Ustawienia')">Ustawienia</button>
+    </nav>
+    <section id="content">Wybierz zakładkę powyżej.</section>
+
+    <script>
+        function showSection(name) {
+            document.getElementById('content').innerText = 'Wyświetlasz: ' + name;
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then(() => {
+                console.log('Service Worker zarejestrowany');
+            });
+        }
+    </script>
+</body>
+</html>
