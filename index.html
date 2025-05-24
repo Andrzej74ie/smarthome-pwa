@@ -19,6 +19,8 @@
         ul { list-style: none; padding: 0; }
         li { margin: 0.5em 0; background: #1f1f1f; padding: 0.5em; display: flex; justify-content: space-between; align-items: center; }
         li button { background: red; color: white; border: none; padding: 0.3em 0.5em; }
+        label { display: flex; align-items: center; margin: 0.5em 0; }
+        label input { width: auto; margin-right: 0.5em; }
     </style>
 </head>
 <body>
@@ -34,6 +36,7 @@
             <h3>Zaloguj się</h3>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Hasło">
+            <label><input type="checkbox" id="stayLoggedIn"> Nie wylogowuj mnie</label>
             <button onclick="login()">Zaloguj</button>
             <button onclick="signup()">Zarejestruj się</button>
         </div>
@@ -66,6 +69,16 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Check if user is already logged in
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                showSection('cameras');
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('cameras-section').style.display = 'none';
+            }
+        });
+
         function showSection(name) {
             if (name === 'cameras') {
                 document.getElementById('login-section').style.display = 'none';
@@ -77,12 +90,18 @@
         function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert('Zalogowano!');
-                    showSection('cameras');
-                })
-                .catch(error => alert(error.message));
+            const stayLoggedIn = document.getElementById('stayLoggedIn').checked;
+
+            const persistence = stayLoggedIn ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+
+            auth.setPersistence(persistence).then(() => {
+                return auth.signInWithEmailAndPassword(email, password);
+            })
+            .then(() => {
+                alert('Zalogowano!');
+                showSection('cameras');
+            })
+            .catch(error => alert(error.message));
         }
 
         function signup() {
