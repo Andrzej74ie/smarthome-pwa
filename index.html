@@ -72,10 +72,12 @@
 
         auth.onAuthStateChanged(user => {
             if (user) {
+                console.log('Użytkownik zalogowany:', user.email);
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('cameras-section').style.display = 'block';
                 loadCameras();
             } else {
+                console.log('Brak zalogowanego użytkownika');
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('cameras-section').style.display = 'none';
             }
@@ -103,7 +105,10 @@
                 alert('Zalogowano!');
                 showSection('cameras');
             })
-            .catch(error => alert(error.message));
+            .catch(error => {
+                console.error('Błąd logowania:', error);
+                alert('Błąd logowania: ' + error.message);
+            });
         }
 
         function signup() {
@@ -111,7 +116,10 @@
             const password = document.getElementById('password').value;
             auth.createUserWithEmailAndPassword(email, password)
                 .then(() => alert('Zarejestrowano!'))
-                .catch(error => alert(error.message));
+                .catch(error => {
+                    console.error('Błąd rejestracji:', error);
+                    alert('Błąd rejestracji: ' + error.message);
+                });
         }
 
         function logout() {
@@ -123,6 +131,12 @@
         }
 
         function addCamera() {
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Musisz być zalogowany, aby dodać kamerę!');
+                return;
+            }
+
             const name = document.getElementById('cameraName').value.trim();
             const url = document.getElementById('cameraURL').value.trim();
             const type = document.getElementById('cameraType').value.trim();
@@ -140,7 +154,7 @@
                 })
                 .catch(error => {
                     console.error('Błąd przy dodawaniu kamery:', error);
-                    alert('Wystąpił błąd przy dodawaniu kamery. Sprawdź konsolę.');
+                    alert('Błąd przy dodawaniu kamery: ' + error.message);
                 });
         }
 
@@ -152,7 +166,7 @@
                 })
                 .catch(error => {
                     console.error('Błąd przy usuwaniu kamery:', error);
-                    alert('Wystąpił błąd przy usuwaniu kamery. Sprawdź konsolę.');
+                    alert('Błąd przy usuwaniu kamery: ' + error.message);
                 });
         }
 
@@ -172,6 +186,7 @@
                 });
             }).catch(error => {
                 console.error('Błąd przy ładowaniu kamer:', error);
+                alert('Błąd przy ładowaniu kamer: ' + error.message);
             });
         }
     </script>
